@@ -39,7 +39,8 @@ namespace AES_Demo
 
             // Set default values
             radioKey128.Checked = true;
-            radioCBC.Checked = true;
+            radioECB.Checked = true;
+            IVInput.Enabled = false;
 
             // Set default settings for AES
             mode = 0;
@@ -52,37 +53,46 @@ namespace AES_Demo
         {
             keySize = 128;
             setStatusStrip("Changed key size to 128");
+
         }
 
         private void radioKey192_CheckedChanged(object sender, System.EventArgs e)
         {
             keySize = 192;
             setStatusStrip("Changed key size to 192");
+
         }
 
         private void radioKey256_CheckedChanged(object sender, System.EventArgs e)
         {
             keySize = 256;
             setStatusStrip("Changed key size to 256");
+
         }
 
         // Handle Radio Group Chaining Mode
-        private void radioCBC_CheckedChanged(object sender, System.EventArgs e)
-        {
-            mode = 1;
-            setStatusStrip("Changed Chaining Mode to CBC");
-        }
-
         private void radioECB_CheckedChanged(object sender, System.EventArgs e)
         {
             mode = 0;
             setStatusStrip("Changed Chaining Mode to ECB");
+            IVInput.Enabled = false;
+            IVInput.Text = "";
+        }
+
+        private void radioCBC_CheckedChanged(object sender, System.EventArgs e)
+        {
+            mode = 1;
+            setStatusStrip("Changed Chaining Mode to CBC");
+            IVInput.Enabled = true;
+            IVInput.Text = "";
         }
 
         private void radioCFB_CheckedChanged(object sender, System.EventArgs e)
         {
             mode = 2;
             setStatusStrip("Changed Chaining Mode to CFB");
+            IVInput.Enabled = true;
+            IVInput.Text = "";
         }
 
         private void radioCTR_CheckedChanged(object sender, System.EventArgs e)
@@ -90,6 +100,8 @@ namespace AES_Demo
             mode = 4;
             // CTR is not supported by .NET
             setStatusStrip("CTR is not supported by .NET, using BouncyCastle AES Engine for CTR mode");
+            IVInput.Enabled = true;
+            IVInput.Text = "";
         }
 
         private void radioOFB_CheckedChanged(object sender, System.EventArgs e)
@@ -97,6 +109,8 @@ namespace AES_Demo
             mode = 3;
             // OFB somehow not working, internal error
             setStatusStrip("Changed Chaining Mode to OFB");
+            IVInput.Enabled = true;
+            IVInput.Text = "";
         }
 
         // Status Strip msg Handler
@@ -149,6 +163,12 @@ namespace AES_Demo
 
         private void btnIVRandom_Click(object sender, EventArgs e)
         {
+            if (mode == 0)
+            {
+                MessageBox.Show("IV is not needed for ECB mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             aes = Aes.Create();
             aes.Mode = HistoryItem.ConvertMode(mode);
             aes.KeySize = keySize;
@@ -161,8 +181,15 @@ namespace AES_Demo
         {
             PasswordDeriveBytes pdb = new PasswordDeriveBytes(PassInput.Text, salt); // Create a PasswordDeriveBytes object with the password and salt
             KeyInput.Text = Convert.ToBase64String(pdb.GetBytes(keySize / 8)); // Generate a key from the password
-            IVInput.Text = Convert.ToBase64String(pdb.GetBytes(blockSize / 8)); // Generate an IV from the password
-            setStatusStrip("Key and IV generated.");
+            if (mode != 0)
+            {
+                IVInput.Text = Convert.ToBase64String(pdb.GetBytes(blockSize / 8)); // Generate an IV from the password
+                setStatusStrip("Key and IV generated.");
+            }
+            else
+            {
+                setStatusStrip("Key generated.");
+            }
         }
 
         private string EncryptText(string plaintext)
@@ -177,7 +204,8 @@ namespace AES_Demo
             aes.KeySize = keySize;
             aes.BlockSize = blockSize;
             aes.Key = key;
-            aes.IV = iv;
+            if (mode != 0)
+                aes.IV = iv;
 
             // Create Encryptor
             ICryptoTransform transform = aes.CreateEncryptor();
@@ -234,7 +262,8 @@ namespace AES_Demo
             aes.KeySize = keySize;
             aes.BlockSize = blockSize;
             aes.Key = key;
-            aes.IV = iv;
+            if (mode != 0)
+                aes.IV = iv;
 
             // Create Decryptor
             ICryptoTransform transform = aes.CreateDecryptor();
@@ -712,9 +741,6 @@ namespace AES_Demo
                     OutputTextBox.Text = item.Output;
                 }
 
-                KeyInput.Text = item.Key;
-                IVInput.Text = item.IV;
-
                 switch (item.Mode)
                 {
                     case 0:
@@ -745,6 +771,9 @@ namespace AES_Demo
                         radioKey256.Checked = true;
                         break;
                 }
+
+                KeyInput.Text = item.Key;
+                IVInput.Text = item.IV;
             }
         }
     }

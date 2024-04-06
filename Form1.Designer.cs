@@ -172,13 +172,11 @@
             // radioCBC
             // 
             this.radioCBC.AutoSize = true;
-            this.radioCBC.Checked = true;
-            this.radioCBC.Location = new System.Drawing.Point(16, 32);
+            this.radioCBC.Location = new System.Drawing.Point(16, 68);
             this.radioCBC.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.radioCBC.Name = "radioCBC";
             this.radioCBC.Size = new System.Drawing.Size(61, 26);
             this.radioCBC.TabIndex = 11;
-            this.radioCBC.TabStop = true;
             this.radioCBC.Text = "CBC";
             this.radioCBC.UseVisualStyleBackColor = true;
             this.radioCBC.CheckedChanged += new System.EventHandler(this.radioCBC_CheckedChanged);
@@ -186,11 +184,13 @@
             // radioECB
             // 
             this.radioECB.AutoSize = true;
-            this.radioECB.Location = new System.Drawing.Point(16, 68);
+            this.radioECB.Checked = true;
+            this.radioECB.Location = new System.Drawing.Point(16, 32);
             this.radioECB.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.radioECB.Name = "radioECB";
             this.radioECB.Size = new System.Drawing.Size(59, 26);
             this.radioECB.TabIndex = 12;
+            this.radioECB.TabStop = true;
             this.radioECB.Text = "ECB";
             this.radioECB.UseVisualStyleBackColor = true;
             this.radioECB.CheckedChanged += new System.EventHandler(this.radioECB_CheckedChanged);

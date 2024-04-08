@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Security.Cryptography;
 using System.Windows.Forms;
+using static AES_Demo.AES_Demo;
 
 namespace AES_Demo
 {
@@ -15,21 +16,20 @@ namespace AES_Demo
         public Form1() // constructor
         {
             InitializeComponent();
+            //test();
         }
 
         // ! Default values
         private string history_filename = "history.json";
         private string key_filename = "key.txt";
         private string iv_filename = "iv.txt";
-        private int mode = 0; // 0 = ECB, 1 = CBC, 2 = CFB, 3 = OFB, 4 = CTR
-        private int keySize = 128;
-        private int blockSize = 128;
+        private AES_Demo.ChainMode mode = AES_Demo.ChainMode.ECB; // 0 = ECB, 1 = CBC, 2 = CFB, 3 = OFB, 4 = CTR
+        private AES_Demo.KeySize keySize = AES_Demo.KeySize.Bits128;
+        private int blockSize = AES_Demo.blockSize;
+        private bool Base64 = false;
         byte[] salt = new byte[] { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F };
         string encrypted_extension = ".aes";
         List<HistoryItem> history = new List<HistoryItem>();
-
-        SymmetricAlgorithm aes;
-        // AesEngine engine = new AesEngine(); // BouncyCastle AES Engine for CTR mode
 
         // AES Initialization
         private void Form1_Load(object sender, EventArgs e)
@@ -40,32 +40,33 @@ namespace AES_Demo
             // Set default values
             radioKey128.Checked = true;
             radioECB.Checked = true;
+            radioBase64.Checked = false;
             IVInput.Enabled = false;
+            Base64 = false;
 
             // Set default settings for AES
-            mode = 0;
-            keySize = 128;
-            blockSize = 128;
+            mode = AES_Demo.ChainMode.ECB;
+            keySize = AES_Demo.KeySize.Bits128;
         }
 
         // Handle Radio Group Key Size
         private void radioKey128_CheckedChanged(object sender, System.EventArgs e)
         {
-            keySize = 128;
+            keySize = AES_Demo.KeySize.Bits128;
             setStatusStrip("Changed key size to 128");
 
         }
 
         private void radioKey192_CheckedChanged(object sender, System.EventArgs e)
         {
-            keySize = 192;
+            keySize = AES_Demo.KeySize.Bits192;
             setStatusStrip("Changed key size to 192");
 
         }
 
         private void radioKey256_CheckedChanged(object sender, System.EventArgs e)
         {
-            keySize = 256;
+            keySize = AES_Demo.KeySize.Bits256;
             setStatusStrip("Changed key size to 256");
 
         }
@@ -73,7 +74,7 @@ namespace AES_Demo
         // Handle Radio Group Chaining Mode
         private void radioECB_CheckedChanged(object sender, System.EventArgs e)
         {
-            mode = 0;
+            mode = AES_Demo.ChainMode.ECB;
             setStatusStrip("Changed Chaining Mode to ECB");
             IVInput.Enabled = false;
             IVInput.Text = "";
@@ -81,36 +82,48 @@ namespace AES_Demo
 
         private void radioCBC_CheckedChanged(object sender, System.EventArgs e)
         {
-            mode = 1;
+            if (mode == AES_Demo.ChainMode.ECB)
+            {
+                IVInput.Enabled = true;
+                IVInput.Text = "";
+            }
+            mode = AES_Demo.ChainMode.CBC;
             setStatusStrip("Changed Chaining Mode to CBC");
-            IVInput.Enabled = true;
-            IVInput.Text = "";
         }
 
         private void radioCFB_CheckedChanged(object sender, System.EventArgs e)
         {
-            mode = 2;
+            if (mode == AES_Demo.ChainMode.ECB)
+            {
+                IVInput.Enabled = true;
+                IVInput.Text = "";
+            }
+            mode = AES_Demo.ChainMode.CFB;
             setStatusStrip("Changed Chaining Mode to CFB");
-            IVInput.Enabled = true;
-            IVInput.Text = "";
-        }
-
-        private void radioCTR_CheckedChanged(object sender, System.EventArgs e)
-        {
-            mode = 4;
-            // CTR is not supported by .NET
-            setStatusStrip("CTR is not supported by .NET, using BouncyCastle AES Engine for CTR mode");
-            IVInput.Enabled = true;
-            IVInput.Text = "";
         }
 
         private void radioOFB_CheckedChanged(object sender, System.EventArgs e)
         {
-            mode = 3;
+            if (mode == AES_Demo.ChainMode.ECB)
+            {
+                IVInput.Enabled = true;
+                IVInput.Text = "";
+            }
+            mode = AES_Demo.ChainMode.OFB;
             // OFB somehow not working, internal error
             setStatusStrip("Changed Chaining Mode to OFB");
-            IVInput.Enabled = true;
-            IVInput.Text = "";
+        }
+
+        private void radioCTR_CheckedChanged(object sender, System.EventArgs e)
+        {
+            if (mode == AES_Demo.ChainMode.ECB)
+            {
+                IVInput.Enabled = true;
+                IVInput.Text = "";
+            }
+            mode = AES_Demo.ChainMode.CTR;
+            // CTR is not supported by .NET
+            setStatusStrip("CTR is not supported by .NET, using BouncyCastle AES Engine for CTR mode");
         }
 
         // Status Strip msg Handler
@@ -153,37 +166,27 @@ namespace AES_Demo
 
         private void btnKeyRandom_Click(object sender, EventArgs e)
         {
-            aes = Aes.Create();
-            aes.Mode = HistoryItem.ConvertMode(mode);
-            aes.KeySize = keySize;
-            aes.BlockSize = blockSize;
-            aes.GenerateKey();
-            KeyInput.Text = Convert.ToBase64String(aes.Key);
+            KeyInput.Text = AES_Demo.randomKey((int)keySize);
         }
 
         private void btnIVRandom_Click(object sender, EventArgs e)
         {
-            if (mode == 0)
+            if (mode == AES_Demo.ChainMode.ECB)
             {
                 MessageBox.Show("IV is not needed for ECB mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            aes = Aes.Create();
-            aes.Mode = HistoryItem.ConvertMode(mode);
-            aes.KeySize = keySize;
-            aes.BlockSize = blockSize;
-            aes.GenerateIV();
-            IVInput.Text = Convert.ToBase64String(aes.IV);
+            IVInput.Text = AES_Demo.randomKey(blockSize);
         }
 
         private void genKeyIV_Click(object sender, EventArgs e)
         {
             PasswordDeriveBytes pdb = new PasswordDeriveBytes(PassInput.Text, salt); // Create a PasswordDeriveBytes object with the password and salt
-            KeyInput.Text = Convert.ToBase64String(pdb.GetBytes(keySize / 8)); // Generate a key from the password
+            KeyInput.Text = AES_Demo.bytesArrayToString(pdb.GetBytes((int)keySize / (8 * 2))); // Generate a key from the password
             if (mode != 0)
             {
-                IVInput.Text = Convert.ToBase64String(pdb.GetBytes(blockSize / 8)); // Generate an IV from the password
+                IVInput.Text = AES_Demo.bytesArrayToString(pdb.GetBytes(blockSize / (8 * 2))); // Generate an IV from the password
                 setStatusStrip("Key and IV generated.");
             }
             else
@@ -192,135 +195,33 @@ namespace AES_Demo
             }
         }
 
-        private string EncryptText(string plaintext)
-        {
-            // Get Key and IV from Base64 string
-            byte[] key = Convert.FromBase64String(KeyInput.Text);
-            byte[] iv = Convert.FromBase64String(IVInput.Text);
-
-            // Create AES object
-            aes = Aes.Create();
-            aes.Mode = HistoryItem.ConvertMode(mode);
-            aes.KeySize = keySize;
-            aes.BlockSize = blockSize;
-            aes.Key = key;
-            if (mode != 0)
-                aes.IV = iv;
-
-            // Create Encryptor
-            ICryptoTransform transform = aes.CreateEncryptor();
-            MemoryStream ms = new MemoryStream(); // Create a memory stream to write the encrypted data to
-            CryptoStream cs = new CryptoStream(ms, transform, CryptoStreamMode.Write); // Create a CryptoStream to encrypt the data
-            StreamWriter sw = new StreamWriter(cs); // Create a StreamWriter to write the data to the CryptoStream
-
-            sw.Write(plaintext); // Write the data to the CryptoStream
-            sw.Close(); // Close the StreamWriter
-            cs.Close(); // Close the CryptoStream
-            byte[] buffer = ms.ToArray(); // Get the encrypted data from the MemoryStream
-            ms.Close(); // Close the MemoryStream
-
-            return Convert.ToBase64String(buffer); // Return the encrypted data as a Base64 string
-        }
-
-        private string EncryptText_BC(string plaintext)
-        {
-            // BouncyCastle AES Engine for CTR & OFB mode
-            AesEngine engine = new AesEngine(); // BouncyCastle AES Engine for CTR mode
-            BufferedBlockCipher cipher;
-            if (mode == 4)
-            {
-                cipher = new BufferedBlockCipher(new SicBlockCipher(engine)); // CTR mode cipher with AES engine in SIC mode (CTR mode)
-            }
-            else
-            {
-                cipher = new BufferedBlockCipher(new OfbBlockCipher(engine, blockSize / 8)); // OFB mode cipher with AES engine
-            }
-
-            KeyParameter keyParam = new KeyParameter(Convert.FromBase64String(KeyInput.Text), 0, keySize / 8); // Create a key parameter from the key
-            ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, Convert.FromBase64String(IVInput.Text), 0, blockSize / 8); // Create a parameter with the key and IV
-
-            cipher.Init(true, keyParamWithIV); // Initialize the cipher with the key and IV
-
-            byte[] input = System.Text.Encoding.UTF8.GetBytes(plaintext); // Convert the plaintext to a byte array
-            byte[] output = new byte[cipher.GetOutputSize(input.Length)]; // Create a byte array to hold the encrypted data
-
-            int length = cipher.ProcessBytes(input, 0, input.Length, output, 0); // Encrypt the data
-            cipher.DoFinal(output, length); // Finalize the encryption
-
-            return Convert.ToBase64String(output); // Return the encrypted data as a Base64 string
-        }
-
-        private string DecryptText(string encrypted)
-        {
-            // Get Key and IV from Base64 string
-            byte[] key = Convert.FromBase64String(KeyInput.Text);
-            byte[] iv = Convert.FromBase64String(IVInput.Text);
-
-            // Create AES object
-            aes = Aes.Create();
-            aes.Mode = HistoryItem.ConvertMode(mode);
-            aes.KeySize = keySize;
-            aes.BlockSize = blockSize;
-            aes.Key = key;
-            if (mode != 0)
-                aes.IV = iv;
-
-            // Create Decryptor
-            ICryptoTransform transform = aes.CreateDecryptor();
-            MemoryStream ms = new MemoryStream(Convert.FromBase64String(encrypted)); // Create a memory stream to read the encrypted data from
-            CryptoStream cs = new CryptoStream(ms, transform, CryptoStreamMode.Read); // Create a CryptoStream to decrypt the data
-            StreamReader sr = new StreamReader(cs); // Create a StreamReader to read the data from the CryptoStream
-
-            string plaintext = sr.ReadToEnd(); // Read the decrypted data from the CryptoStream
-            sr.Close();
-            cs.Close();
-            ms.Close();
-
-            return plaintext; // Return the decrypted data
-        }
-
-        private string DecryptText_BC(string encrypted)
-        {
-            // BouncyCastle AES Engine for CTR mode
-            AesEngine engine = new AesEngine(); // BouncyCastle AES Engine for CTR mode
-            BufferedBlockCipher cipher;
-
-            if (mode == 4)
-            {
-                cipher = new BufferedBlockCipher(new SicBlockCipher(engine)); // CTR mode cipher with AES engine in SIC mode (CTR mode)
-            }
-            else
-            {
-                cipher = new BufferedBlockCipher(new OfbBlockCipher(engine, blockSize / 8)); // OFB mode cipher with AES engine
-            }
-
-            KeyParameter keyParam = new KeyParameter(Convert.FromBase64String(KeyInput.Text), 0, keySize / 8); // Create a key parameter from the key
-            ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, Convert.FromBase64String(IVInput.Text), 0, blockSize / 8); // Create a parameter with the key and IV
-
-            cipher.Init(false, keyParamWithIV); // Initialize the cipher with the key and IV
-
-            byte[] input = Convert.FromBase64String(encrypted); // Convert the encrypted data to a byte array
-            byte[] output = new byte[cipher.GetOutputSize(input.Length)]; // Create a byte array to hold the decrypted data
-
-            int length = cipher.ProcessBytes(input, 0, input.Length, output, 0); // Decrypt the data
-            cipher.DoFinal(output, length); // Finalize the decryption
-
-            return System.Text.Encoding.UTF8.GetString(output); // Return the decrypted data as a string
-        }
-
         private void EncryptFile(string inputPath, string outputPath)
         {
+            if (mode >= ChainMode.ECB && mode <= ChainMode.CFB)
+            {
+                EncryptFile_Helper(inputPath, outputPath);
+            }
+            else
+            {
+                EncryptFile_BouncyCastle(inputPath, outputPath);
+            }
+        }
+
+        private void EncryptFile_Helper(string inputPath, string outputPath)
+        {
             // Get Key and IV from Base64 string
-            byte[] key = Convert.FromBase64String(KeyInput.Text);
-            byte[] iv = Convert.FromBase64String(IVInput.Text);
+            byte[] key = getBytes_Key(KeyInput.Text);
+            byte[] iv = getBytes_Key(IVInput.Text);
 
             // Create AES object
-            aes = Aes.Create();
-            aes.Mode = HistoryItem.ConvertMode(mode);
-            aes.KeySize = keySize;
+            Aes aes = Aes.Create();
+            aes.Mode = mapCipherMode(mode);
+            aes.KeySize = (int)keySize;
             aes.BlockSize = blockSize;
+            aes.Padding = paddingMode;
             aes.Key = key;
-            aes.IV = iv;
+            if (mode != ChainMode.ECB)
+                aes.IV = iv;
 
             // Create Encryptor
             ICryptoTransform transform = aes.CreateEncryptor();
@@ -347,23 +248,26 @@ namespace AES_Demo
             toolStripProgressBar1.Value = 0; // Reset the progress bar
         }
 
-        private void EncryptFile_BC(string inputPath, string outputPath)
+        private void EncryptFile_BouncyCastle(string inputPath, string outputPath)
         {
             // BouncyCastle AES Engine for CTR mode
             AesEngine engine = new AesEngine(); // BouncyCastle AES Engine for CTR mode
             BufferedBlockCipher cipher;
 
-            if (mode == 4)
+            switch (mode)
             {
-                cipher = new BufferedBlockCipher(new SicBlockCipher(engine)); // CTR mode cipher with AES engine in SIC mode (CTR mode)
-            }
-            else
-            {
-                cipher = new BufferedBlockCipher(new OfbBlockCipher(engine, blockSize / 8)); // OFB mode cipher with AES engine
+                case ChainMode.OFB:
+                    cipher = new BufferedBlockCipher(new OfbBlockCipher(engine, blockSize)); // OFB, block size is in bit
+                    break;
+                case ChainMode.CTR:
+                    cipher = new BufferedBlockCipher(new SicBlockCipher(engine)); // CTR
+                    break;
+                default:
+                    throw new Exception("How did you even get here?!!");
             }
 
-            KeyParameter keyParam = new KeyParameter(Convert.FromBase64String(KeyInput.Text), 0, keySize / 8); // Create a key parameter from the key
-            ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, Convert.FromBase64String(IVInput.Text), 0, blockSize / 8); // Create a parameter with the key and IV
+            KeyParameter keyParam = new KeyParameter(getBytes_Key(KeyInput.Text), 0, (int)keySize / 8); // Create a key parameter from the key
+            ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, getBytes_Key(IVInput.Text), 0, blockSize / 8); // Create a parameter with the key and IV
 
             cipher.Init(true, keyParamWithIV); // Initialize the cipher with the key and IV
 
@@ -390,16 +294,36 @@ namespace AES_Demo
             fsOutput.Close();
 
             toolStripProgressBar1.Value = 0; // Reset the progress bar
+
         }
 
         private void DecryptFile(string inputPath, string outputPath)
         {
-            // Get Key and IV from Base64 string
-            byte[] key = Convert.FromBase64String(KeyInput.Text);
-            byte[] iv = Convert.FromBase64String(IVInput.Text);
+            if (mode >= ChainMode.ECB && mode <= ChainMode.CFB)
+            {
+                DecryptFile_Helper(inputPath, outputPath);
+            }
+            else
+            {
+                DecryptFile_BouncyCastle(inputPath, outputPath);
+            }
+        }
 
+        private void DecryptFile_Helper(string inputPath, string outputPath)
+        {
+            // Get Key and IV from Base64 string
+            byte[] key = AES_Demo.getBytes_Key(KeyInput.Text);
+            byte[] iv = AES_Demo.getBytes_Key(IVInput.Text);
+
+            // Create AES object
+            Aes aes = Aes.Create();
+            aes.Mode = AES_Demo.mapCipherMode(mode);
+            aes.KeySize = (int)keySize;
+            aes.BlockSize = blockSize;
+            aes.Padding = AES_Demo.paddingMode;
             aes.Key = key;
-            aes.IV = iv;
+            if (mode != AES_Demo.ChainMode.ECB)
+                aes.IV = iv;
 
             // Create Decryptor
             ICryptoTransform transform = aes.CreateDecryptor();
@@ -426,23 +350,26 @@ namespace AES_Demo
             toolStripProgressBar1.Value = 0; // Reset the progress bar
         }
 
-        private void DecryptFile_BC(string inputPath, string outputPath)
+        private void DecryptFile_BouncyCastle(string inputPath, string outputPath)
         {
             // BouncyCastle AES Engine for CTR mode
             AesEngine engine = new AesEngine(); // BouncyCastle AES Engine for CTR mode
             BufferedBlockCipher cipher;
 
-            if (mode == 4)
+            switch (mode)
             {
-                cipher = new BufferedBlockCipher(new SicBlockCipher(engine)); // CTR mode cipher with AES engine in SIC mode (CTR mode)
-            }
-            else
-            {
-                cipher = new BufferedBlockCipher(new OfbBlockCipher(engine, blockSize / 8)); // OFB mode cipher with AES engine
+                case ChainMode.OFB:
+                    cipher = new BufferedBlockCipher(new OfbBlockCipher(engine, blockSize)); // OFB, block size is in bit
+                    break;
+                case ChainMode.CTR:
+                    cipher = new BufferedBlockCipher(new SicBlockCipher(engine)); // CTR
+                    break;
+                default:
+                    throw new Exception("How did you even get here?!!");
             }
 
-            KeyParameter keyParam = new KeyParameter(Convert.FromBase64String(KeyInput.Text), 0, keySize / 8); // Create a key parameter from the key
-            ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, Convert.FromBase64String(IVInput.Text), 0, blockSize / 8); // Create a parameter with the key and IV
+            KeyParameter keyParam = new KeyParameter(getBytes_Key(KeyInput.Text), 0, (int)keySize / 8); // Create a key parameter from the key
+            ParametersWithIV keyParamWithIV = new ParametersWithIV(keyParam, getBytes_Key(IVInput.Text), 0, blockSize / 8); // Create a parameter with the key and IV
 
             cipher.Init(false, keyParamWithIV); // Initialize the cipher with the key and IV
 
@@ -525,11 +452,22 @@ namespace AES_Demo
 
                 try
                 {
-                    string plaintext = InputTextBox.Text;
-                    string encrypted = (mode == 3 || mode == 4) ? EncryptText_BC(plaintext) : EncryptText(plaintext);
-                    OutputTextBox.Text = encrypted;
+                    byte[] key = AES_Demo.getBytes_Key(KeyInput.Text);
+                    byte[] iv = AES_Demo.getBytes_Key(IVInput.Text);
+                    byte[] plainText = AES_Demo.getBytes_Text(InputTextBox.Text);
+
+                    if (!Base64)
+                    {
+                        OutputTextBox.Text = AES_Demo.bytesArrayToString(AES_Demo.Encrypt(mode, keySize, plainText, key, iv));
+
+                    }
+                    else
+                    {
+                        OutputTextBox.Text = Convert.ToBase64String(AES_Demo.Encrypt(mode, keySize, plainText, key, iv));
+                    }
                     setStatusStrip("Encryption successful.");
-                    history.Add(new HistoryItem(false, mode, keySize, KeyInput.Text, IVInput.Text, plaintext, encrypted));
+
+                    AddItem(true, false, (int)mode, (int)keySize, KeyInput.Text, IVInput.Text, InputTextBox.Text, OutputTextBox.Text, Base64);
                     PopulateHistory();
                 }
                 catch (Exception ex)
@@ -548,16 +486,9 @@ namespace AES_Demo
 
                 try
                 {
-                    if (mode == 3 || mode == 4)
-                    {
-                        EncryptFile_BC(selectedFileBox.Text, selectedSaveBox.Text);
-                    }
-                    else
-                    {
-                        EncryptFile(selectedFileBox.Text, selectedSaveBox.Text);
-                    }
+                    EncryptFile(selectedFileBox.Text, selectedSaveBox.Text);
                     setStatusStrip("File encryption successful.");
-                    history.Add(new HistoryItem(true, mode, keySize, KeyInput.Text, IVInput.Text, selectedFileBox.Text, selectedSaveBox.Text));
+                    AddItem(true, true, (int)mode, (int)keySize, KeyInput.Text, IVInput.Text, selectedFileBox.Text, selectedSaveBox.Text, Base64);
                     PopulateHistory();
                 }
                 catch (Exception ex)
@@ -597,10 +528,23 @@ namespace AES_Demo
 
                 try
                 {
-                    string encrypted = InputTextBox.Text;
-                    string decrypted = (mode == 3 || mode == 4) ? DecryptText_BC(encrypted) : DecryptText(encrypted);
-                    OutputTextBox.Text = decrypted;
+                    byte[] key = AES_Demo.getBytes_Key(KeyInput.Text); // ASCII 8bit
+                    byte[] iv = AES_Demo.getBytes_Key(IVInput.Text); // ASCII 8bit
+                    byte[] ciphertext;
+                    if (!Base64)
+                    {
+                        ciphertext = AES_Demo.stringToBytesArray(InputTextBox.Text); // Byte array
+                    }
+                    else
+                    {
+                        ciphertext = Convert.FromBase64String(InputTextBox.Text); // Byte array
+                    }
+
+                    OutputTextBox.Text = AES_Demo.getString_Text(AES_Demo.Decrypt(mode, keySize, ciphertext, key, iv));
                     setStatusStrip("Decryption successful.");
+
+                    AddItem(false, false, (int)mode, (int)keySize, KeyInput.Text, IVInput.Text, InputTextBox.Text, OutputTextBox.Text, Base64);
+                    PopulateHistory();
                 }
                 catch (Exception ex)
                 {
@@ -617,15 +561,10 @@ namespace AES_Demo
 
                 try
                 {
-                    if (mode == 3 || mode == 4)
-                    {
-                        DecryptFile_BC(selectedFileBox.Text, selectedSaveBox.Text);
-                    }
-                    else
-                    {
-                        DecryptFile(selectedFileBox.Text, selectedSaveBox.Text);
-                    }
+                    DecryptFile(selectedFileBox.Text, selectedSaveBox.Text);
                     setStatusStrip("File decryption successful.");
+                    AddItem(false, true, (int)mode, (int)keySize, KeyInput.Text, IVInput.Text, selectedFileBox.Text, selectedSaveBox.Text, Base64);
+                    PopulateHistory();
                 }
                 catch (Exception ex)
                 {
@@ -714,8 +653,13 @@ namespace AES_Demo
             historyListBox.Items.Clear();
             foreach (HistoryItem item in history)
             {
-                historyListBox.Items.Add((item.Mode == 4 ? "CTR" : HistoryItem.ConvertMode(item.Mode).ToString()) + ": " + (item.isFile ? Path.GetFileName(item.Input) : item.Input));
+                historyListBox.Items.Add(AES_Demo.modeToString((AES_Demo.ChainMode)item.Mode) + (item.Encrypt ? "-Encrypt" : "-Decrypt") + ": " + (item.isFile ? Path.GetFileName(item.Input) : item.Input)); ;
             }
+        }
+
+        private void AddItem(bool Encrypt, bool isFile, int Mode, int KeySize, string Key, string IV, string Input, string Output, bool Base64)
+        {
+            history.Add(new HistoryItem(Encrypt, isFile, Mode, KeySize, Key, IV, Input, Output, Base64));
         }
 
         private void historyListBox_SelectedIndexChanged(object sender, EventArgs e)
@@ -739,6 +683,16 @@ namespace AES_Demo
                     tabControl1.SelectedIndex = 0;
                     InputTextBox.Text = item.Input;
                     OutputTextBox.Text = item.Output;
+
+                    switch (item.Base64)
+                    {
+                        case true:
+                            radioBase64.Checked = true;
+                            break;
+                        case false:
+                            radioHex.Checked = true;
+                            break;
+                    }
                 }
 
                 switch (item.Mode)
@@ -776,5 +730,48 @@ namespace AES_Demo
                 IVInput.Text = item.IV;
             }
         }
+
+        private void radioBase64_CheckedChanged(object sender, EventArgs e)
+        {
+            Base64 = true;
+            setStatusStrip("Using cipher text format: Base64");
+        }
+
+        private void radioHex_CheckedChanged(object sender, EventArgs e)
+        {
+            Base64 = false;
+            setStatusStrip("Using cipher text format: Hex");
+        }
+
+        //private byte[] hexStringToByteArr(string hexString)
+        //{
+        //    return Enumerable.Range(0, hexString.Length / 2).Select(x => Convert.ToByte(hexString.Substring(x * 2, 2), 16)).ToArray();
+        //}
+
+        //private string byteArrToHexString(byte[] byteArr)
+        //{
+        //    return Enumerable.Range(0, byteArr.Length).Select(x => byteArr[x].ToString("X2")).Aggregate((x, y) => x + y);
+        //}
+
+        //private void test()
+        //{
+        //    byte[] key = hexStringToByteArr("10a58869d74be5a374cf867cfb473859");
+        //    aes = Aes.Create();
+        //    aes.Mode = CipherMode.ECB;
+        //    aes.KeySize = 128;
+        //    aes.BlockSize = 128;
+        //    aes.Key = key;
+        //    byte[] plaintext = hexStringToByteArr("00000000000000000000000000000000");
+
+        //    ICryptoTransform transform = aes.CreateEncryptor();
+        //    MemoryStream ms = new MemoryStream();
+        //    CryptoStream cs = new CryptoStream(ms, transform, CryptoStreamMode.Write);
+        //    cs.Write(plaintext, 0, plaintext.Length);
+        //    cs.Close();
+        //    byte[] buffer = ms.ToArray();
+        //    ms.Close();
+        //    string encrypted = byteArrToHexString(buffer);
+        //    MessageBox.Show(encrypted);
+        //}
     }
 }

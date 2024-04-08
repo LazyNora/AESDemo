@@ -64,6 +64,9 @@
             this.label5 = new System.Windows.Forms.Label();
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabText = new System.Windows.Forms.TabPage();
+            this.radioHex = new System.Windows.Forms.RadioButton();
+            this.radioBase64 = new System.Windows.Forms.RadioButton();
+            this.label7 = new System.Windows.Forms.Label();
             this.tabFile = new System.Windows.Forms.TabPage();
             this.label6 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -343,24 +346,24 @@
             // 
             this.label1.AutoSize = true;
             this.label1.Font = new System.Drawing.Font("Nunito", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label1.Location = new System.Drawing.Point(477, 3);
+            this.label1.Location = new System.Drawing.Point(477, 53);
             this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(61, 22);
+            this.label1.Size = new System.Drawing.Size(65, 22);
             this.label1.TabIndex = 26;
-            this.label1.Text = "Output";
+            this.label1.Text = "Output:";
             this.label1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // label2
             // 
             this.label2.AutoSize = true;
             this.label2.Font = new System.Drawing.Font("Nunito", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label2.Location = new System.Drawing.Point(12, 3);
+            this.label2.Location = new System.Drawing.Point(12, 53);
             this.label2.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(47, 22);
+            this.label2.Size = new System.Drawing.Size(51, 22);
             this.label2.TabIndex = 25;
-            this.label2.Text = "Input";
+            this.label2.Text = "Input:";
             this.label2.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
             // 
             // InputTextBox
@@ -369,11 +372,11 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.InputTextBox.Font = new System.Drawing.Font("Nunito", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.InputTextBox.Location = new System.Drawing.Point(12, 30);
+            this.InputTextBox.Location = new System.Drawing.Point(12, 80);
             this.InputTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.InputTextBox.Multiline = true;
             this.InputTextBox.Name = "InputTextBox";
-            this.InputTextBox.Size = new System.Drawing.Size(350, 207);
+            this.InputTextBox.Size = new System.Drawing.Size(350, 162);
             this.InputTextBox.TabIndex = 24;
             // 
             // OutputTextBox
@@ -382,11 +385,11 @@
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputTextBox.Font = new System.Drawing.Font("Nunito", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.OutputTextBox.Location = new System.Drawing.Point(477, 30);
+            this.OutputTextBox.Location = new System.Drawing.Point(477, 80);
             this.OutputTextBox.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.OutputTextBox.Multiline = true;
             this.OutputTextBox.Name = "OutputTextBox";
-            this.OutputTextBox.Size = new System.Drawing.Size(350, 207);
+            this.OutputTextBox.Size = new System.Drawing.Size(350, 162);
             this.OutputTextBox.TabIndex = 23;
             // 
             // btnSelectFile
@@ -428,7 +431,7 @@
             // 
             this.btnSwap.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.btnSwap.Location = new System.Drawing.Point(398, 111);
+            this.btnSwap.Location = new System.Drawing.Point(398, 139);
             this.btnSwap.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.btnSwap.Name = "btnSwap";
             this.btnSwap.Size = new System.Drawing.Size(45, 45);
@@ -465,6 +468,7 @@
             this.historyListBox.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.historyListBox.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.historyListBox.FormattingEnabled = true;
+            this.historyListBox.HorizontalScrollbar = true;
             this.historyListBox.ItemHeight = 22;
             this.historyListBox.Location = new System.Drawing.Point(0, 41);
             this.historyListBox.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
@@ -498,6 +502,9 @@
             // tabText
             // 
             this.tabText.BackColor = System.Drawing.SystemColors.Window;
+            this.tabText.Controls.Add(this.radioHex);
+            this.tabText.Controls.Add(this.radioBase64);
+            this.tabText.Controls.Add(this.label7);
             this.tabText.Controls.Add(this.label2);
             this.tabText.Controls.Add(this.label1);
             this.tabText.Controls.Add(this.InputTextBox);
@@ -510,6 +517,39 @@
             this.tabText.TabIndex = 0;
             this.tabText.Text = "Plain Text";
             this.tabText.ToolTipText = "Encrypt / Decrypt Text";
+            // 
+            // radioHex
+            // 
+            this.radioHex.AutoSize = true;
+            this.radioHex.Checked = true;
+            this.radioHex.Location = new System.Drawing.Point(174, 20);
+            this.radioHex.Name = "radioHex";
+            this.radioHex.Size = new System.Drawing.Size(57, 26);
+            this.radioHex.TabIndex = 38;
+            this.radioHex.TabStop = true;
+            this.radioHex.Text = "Hex";
+            this.radioHex.UseVisualStyleBackColor = true;
+            this.radioHex.CheckedChanged += new System.EventHandler(this.radioHex_CheckedChanged);
+            // 
+            // radioBase64
+            // 
+            this.radioBase64.AutoSize = true;
+            this.radioBase64.Location = new System.Drawing.Point(84, 20);
+            this.radioBase64.Name = "radioBase64";
+            this.radioBase64.Size = new System.Drawing.Size(84, 26);
+            this.radioBase64.TabIndex = 37;
+            this.radioBase64.Text = "Base64";
+            this.radioBase64.UseVisualStyleBackColor = true;
+            this.radioBase64.CheckedChanged += new System.EventHandler(this.radioBase64_CheckedChanged);
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Location = new System.Drawing.Point(12, 22);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(66, 22);
+            this.label7.TabIndex = 36;
+            this.label7.Text = "Format:";
             // 
             // tabFile
             // 
@@ -723,5 +763,8 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.TextBox selectedSaveBox;
         private System.Windows.Forms.Button btnSelectLocation;
+        private System.Windows.Forms.Label label7;
+        private System.Windows.Forms.RadioButton radioHex;
+        private System.Windows.Forms.RadioButton radioBase64;
     }
 }

@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
-using System.Security.Cryptography;
 
 namespace AES_Demo
 {
     public class HistoryItem
     {
+        public bool Encrypt { get; set; } // true = encrypt, false = decrypt
         public bool isFile { get; set; } // true = file, false = text
         public int Mode { get; set; } // 0 = ECB, 1 = CBC, 2 = CFB, 3 = OFB, 4 = CTR
         public int KeySize { get; set; } // 128, 192, 256
@@ -12,9 +12,11 @@ namespace AES_Demo
         public string IV { get; set; }
         public string Input { get; set; }
         public string Output { get; set; }
+        public bool Base64 { get; set; }
 
-        public HistoryItem(bool isFile, int Mode, int KeySize, string Key, string IV, string Input, string Output)
+        public HistoryItem(bool Encrypt, bool isFile, int Mode, int KeySize, string Key, string IV, string Input, string Output, bool Base64)
         {
+            this.Encrypt = Encrypt;
             this.isFile = isFile;
             this.Mode = Mode;
             this.KeySize = KeySize;
@@ -22,46 +24,12 @@ namespace AES_Demo
             this.IV = IV;
             this.Input = Input;
             this.Output = Output;
-        }
-
-        public static int ConvertMode(CipherMode mode = 0)
-        {
-            switch (mode)
-            {
-
-                case CipherMode.ECB:
-                    return 0;
-                case CipherMode.CBC:
-                    return 1;
-                case CipherMode.CFB:
-                    return 2;
-                case CipherMode.OFB:
-                    return 3;
-                default:
-                    return 0;
-            }
-        }
-
-        public static CipherMode ConvertMode(int mode = 0)
-        {
-            switch (mode)
-            {
-                case 0:
-                    return CipherMode.ECB;
-                case 1:
-                    return CipherMode.CBC;
-                case 2:
-                    return CipherMode.CFB;
-                case 3:
-                    return CipherMode.OFB;
-                default:
-                    return CipherMode.ECB;
-            }
+            this.Base64 = Base64;
         }
 
         public override string ToString()
         {
-            return string.Format("Mode: {0}, KeySize: {1}, Key: {2}, IV: {3}, Input: {4}, Output: {5}", Mode, KeySize, Key, IV, Input, Output);
+            return string.Format("{0} Mode: {1}, KeySize: {2}, Key: {3}, IV: {4}, Input: {5}, Output: {6}", Encrypt ? "EN" : "DE", Mode, KeySize, Key, IV, Input, Output);
         }
     }
 

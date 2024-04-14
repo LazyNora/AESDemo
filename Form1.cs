@@ -612,6 +612,12 @@ namespace AES_Demo
 
         private void btnSelectIV_Click(object sender, EventArgs e)
         {
+            if (mode == ChainMode.ECB)
+            {
+                MessageBox.Show("IV is not needed for ECB mode.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
             try
             {
                 setStatusStrip("Selecting IV file...");
@@ -742,36 +748,5 @@ namespace AES_Demo
             Base64 = false;
             setStatusStrip("Using cipher text format: Hex");
         }
-
-        //private byte[] hexStringToByteArr(string hexString)
-        //{
-        //    return Enumerable.Range(0, hexString.Length / 2).Select(x => Convert.ToByte(hexString.Substring(x * 2, 2), 16)).ToArray();
-        //}
-
-        //private string byteArrToHexString(byte[] byteArr)
-        //{
-        //    return Enumerable.Range(0, byteArr.Length).Select(x => byteArr[x].ToString("X2")).Aggregate((x, y) => x + y);
-        //}
-
-        //private void test()
-        //{
-        //    byte[] key = hexStringToByteArr("10a58869d74be5a374cf867cfb473859");
-        //    aes = Aes.Create();
-        //    aes.Mode = CipherMode.ECB;
-        //    aes.KeySize = 128;
-        //    aes.BlockSize = 128;
-        //    aes.Key = key;
-        //    byte[] plaintext = hexStringToByteArr("00000000000000000000000000000000");
-
-        //    ICryptoTransform transform = aes.CreateEncryptor();
-        //    MemoryStream ms = new MemoryStream();
-        //    CryptoStream cs = new CryptoStream(ms, transform, CryptoStreamMode.Write);
-        //    cs.Write(plaintext, 0, plaintext.Length);
-        //    cs.Close();
-        //    byte[] buffer = ms.ToArray();
-        //    ms.Close();
-        //    string encrypted = byteArrToHexString(buffer);
-        //    MessageBox.Show(encrypted);
-        //}
     }
 }

@@ -125,7 +125,7 @@
             this.statusStrip1.Name = "statusStrip1";
             this.statusStrip1.Padding = new System.Windows.Forms.Padding(2, 0, 21, 0);
             this.statusStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.Professional;
-            this.statusStrip1.Size = new System.Drawing.Size(1068, 28);
+            this.statusStrip1.Size = new System.Drawing.Size(1084, 28);
             this.statusStrip1.TabIndex = 2;
             this.statusStrip1.Text = "statusStrip1";
             // 
@@ -457,7 +457,7 @@
             this.panel1.Controls.Add(this.historyListBox);
             this.panel1.Controls.Add(this.label5);
             this.panel1.Dock = System.Windows.Forms.DockStyle.Right;
-            this.panel1.Location = new System.Drawing.Point(868, 0);
+            this.panel1.Location = new System.Drawing.Point(884, 0);
             this.panel1.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 593);
@@ -669,7 +669,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 22F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1068, 621);
+            this.ClientSize = new System.Drawing.Size(1084, 621);
             this.Controls.Add(this.btnSelectIV);
             this.Controls.Add(this.btnSelectKey);
             this.Controls.Add(this.genKeyIV);
@@ -693,7 +693,8 @@
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
-            this.MinimumSize = new System.Drawing.Size(1084, 660);
+            this.MaximumSize = new System.Drawing.Size(1100, 660);
+            this.MinimumSize = new System.Drawing.Size(1100, 660);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "AES Demonstration";

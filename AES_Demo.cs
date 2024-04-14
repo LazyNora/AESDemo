@@ -154,7 +154,7 @@ namespace AES_Demo
             }
             else
             {
-                return Encrypt_BoucyCastle(chainMode, keySize, plainText, key, iv);
+                return Encrypt_BouncyCastle(chainMode, keySize, plainText, key, iv);
             }
 
         }
@@ -183,8 +183,8 @@ namespace AES_Demo
 
         }
 
-        // BoucyCastle implementation of encryption using OFB and CTR modes
-        private static byte[] Encrypt_BoucyCastle(ChainMode chainMode, KeySize keySize, byte[] plainText, byte[] key, byte[] iv = null)
+        // BouncyCastle implementation of encryption using OFB and CTR modes
+        private static byte[] Encrypt_BouncyCastle(ChainMode chainMode, KeySize keySize, byte[] plainText, byte[] key, byte[] iv = null)
         {
             AesEngine aesEngine = new AesEngine();
             PaddedBufferedBlockCipher cipher;
@@ -245,7 +245,7 @@ namespace AES_Demo
             }
             else
             {
-                return Decrypt_BoucyCastle(chainMode, keySize, cipherText, key, iv);
+                return Decrypt_BouncyCastle(chainMode, keySize, cipherText, key, iv);
             }
         }
 
@@ -272,8 +272,8 @@ namespace AES_Demo
             return decrypted;
         }
 
-        // BoucyCastle implementation of decryption using OFB and CTR modes
-        private static byte[] Decrypt_BoucyCastle(ChainMode chainMode, KeySize keySize, byte[] cipherText, byte[] key, byte[] iv = null)
+        // BouncyCastle implementation of decryption using OFB and CTR modes
+        private static byte[] Decrypt_BouncyCastle(ChainMode chainMode, KeySize keySize, byte[] cipherText, byte[] key, byte[] iv = null)
         {
             AesEngine aesEngine = new AesEngine();
             PaddedBufferedBlockCipher cipher;
